@@ -1,10 +1,12 @@
 /* This code, authored by Tuhkis, is released into the public domain. */
-/* Further license information is provided at the end of the file. */
 
 /*
  * This is a library that allows for the packing of multiple files into one.
  * This library is designed to avoid doing allocations itself and leaving
  * allocating buffers and loading files up to the user.
+ *
+ * This is only concerned with decoding and coding data. Loading, saving and
+ * using the data is an issue for the user.
  *
  * This library is written in C89, but also ensures compatibility with C++.
  *
@@ -37,6 +39,8 @@
  * by defining the macro RESPACK_NO_INCLUDE_STD before its compilation.
  * If you do this you must also define the following macros:
  *   RESPACK_PUTS - A function that takes a string and print that to the stdio
+ *   RESPACK_SIZE_T - A type that is equilevant to size_t.
+ *   RESPACK_UINT8 - A type that represents one byte. Override if unsigned char is not one byte
  */
 
 #ifndef RESPACK_H
@@ -46,7 +50,44 @@
 extern "C" {
 #endif /* __cplusplus */
 
+/* I try to avoid platform specific code, but this is needed. */
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
+#ifdef RESPACK_SHARED_LIBRARY
+#define RESPACK_API __declspec(dllexport)
+#else
+#define RESPACK_API __declspec(dllimport)
+#endif /* RESPACK_SHARED_LIBRARY */
+#else
+#define RESPACK_API
+#endif /* _WIN32 */
+
+#ifndef RESPACK_NO_INCLUDE_STD
+#include "stddef.h" /* size_t */
+#include "inttypes.h" /* uint8_t */
+#endif /* RESPACK_NO_INCLUDE_STD */
+
+#ifndef RESPACK_SIZE_T
+#define RESPACK_SIZE_T size_t
+#endif /* RESPACK_SIZE_T */
+
+#ifndef RESPACK_UINT8
+#ifdef uint8_t
+#define RESPACK_UINT8 uint8_t
+#else
+#define RESPACK_UINT8 unsigned char
+#endif /* uint8_t */
+#endif /* RESPACK_UINT8 */
+
 /* type definitions */
+
+struct resp_file_header
+{
+  RESPACK_SIZE_T beginning;
+  RESPACK_SIZE_T size;
+  int name_hash;
+};
 
 /**
  * resp_header is always found at the top of a respack file.
@@ -56,12 +97,13 @@ extern "C" {
  */
 struct resp_header
 {
-  char magic[4];
-  int packed_files;
+  unsigned char magic[4]; /* Magic bytes at beginning, aligned to four bytes */
+  RESPACK_SIZE_T packed_files; /* The amount of files in one files (inception) */
+  struct resp_file_header *file_headers;
 };
-typedef struct resp_header resp_Header;
 
 /* function prototypes */
+RESPACK_API void resp_header_set_magic_bytes(struct resp_header *header);
 
 #ifdef __cplusplus
 }
@@ -71,24 +113,4 @@ typedef struct resp_header resp_Header;
 #ifdef RESPACK_IMPLEMENTATION
 #include "respack.c"
 #endif /* RESPACK_IMPLEMENTATION */
-
-/*
-LICENSE (unlicense):
-This is free and unencumbered software released into the public domain.
-Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
-software, either in source code form or as a compiled binary, for any purpose,
-commercial or non-commercial, and by any means.
-In jurisdictions that recognize copyright laws, the author or authors of this
-software dedicate any and all copyright interest in the software to the public
-domain. We make this dedication for the benefit of the public at large and to
-the detriment of our heirs and successors. We intend this dedication to be an
-overt act of relinquishment in perpetuity of all present and future rights to
-this software under copyright law.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
 

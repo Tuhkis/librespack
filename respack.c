@@ -1,5 +1,4 @@
 /* This code, authored by Tuhkis, is released into the public domain. */
-/* Further license information is provided at the end of the file. */
 
 #ifndef RESPACK_IMPLEMENTATION
 #include "respack.h"
@@ -20,29 +19,28 @@ extern "C" {
 /* Constants */
 
 /* The magic bytes that begin every respack file. */
-char _RESP_MAGIC_BYTES[4] = { 0xB0, 0x0B, 0x13, 0x50 };
+static unsigned char _RESP_MAGIC_BYTES[4] = { 0xB0, 0x0B, 0x13, 0x50 };
+
+/* Procedures */
+RESPACK_API void resp_header_set_magic_bytes(struct resp_header *header)
+{
+  header->magic[0] = _RESP_MAGIC_BYTES[0];
+  header->magic[1] = _RESP_MAGIC_BYTES[1];
+  header->magic[2] = _RESP_MAGIC_BYTES[2];
+  header->magic[3] = _RESP_MAGIC_BYTES[3];
+}
+
+RESPACK_API int resp_header_valid_magic_bytes(struct resp_header *header)
+{
+  return (
+    header->magic[0] == _RESP_MAGIC_BYTES[0] &&
+    header->magic[1] == _RESP_MAGIC_BYTES[1] &&
+    header->magic[2] == _RESP_MAGIC_BYTES[2] &&
+    header->magic[3] == _RESP_MAGIC_BYTES[3]
+  );
+}
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-/*
-LICENSE:
-This is free and unencumbered software released into the public domain.
-Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
-software, either in source code form or as a compiled binary, for any purpose,
-commercial or non-commercial, and by any means.
-In jurisdictions that recognize copyright laws, the author or authors of this
-software dedicate any and all copyright interest in the software to the public
-domain. We make this dedication for the benefit of the public at large and to
-the detriment of our heirs and successors. We intend this dedication to be an
-overt act of relinquishment in perpetuity of all present and future rights to
-this software under copyright law.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
 
